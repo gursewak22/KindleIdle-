@@ -6,7 +6,6 @@ const os = require('os');
 const path = require('path');
 const store = require('./store');
 const render = require('./render');
-const probe = require('./probe');
 
 const PORT = Number(process.env.PORT) || 8080;
 const PUBLIC = path.join(__dirname, '..', 'public');
@@ -122,11 +121,6 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
-    if (req.method === 'GET' && route === '/probe') {
-      sendHtml(res, probe.renderProbePage());
-      return;
-    }
-
     if (req.method === 'GET' && route === '/api/poll') {
       const since = Number(url.searchParams.get('v'));
       const v = await store.waitForChange(since, POLL_MS);
@@ -191,7 +185,6 @@ server.listen(PORT, '0.0.0.0', () => {
   console.log('\n  Kindle Idle is running\n');
   console.log(`  Kindle screen   http://localhost:${PORT}/`);
   console.log(`  Phone remote    http://localhost:${PORT}/remote`);
-  console.log(`  Device probe    http://localhost:${PORT}/probe`);
   if (hosts.length) {
     console.log('\n  On your network:');
     for (const h of hosts) {
