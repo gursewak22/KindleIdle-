@@ -74,7 +74,6 @@ public/
 | --- | --- |
 | `GET /` | Kindle screen |
 | `GET /remote` | phone control page |
-| `GET /probe` | device capability report (see below) |
 | `GET /api/poll?v=N` | long-poll; returns rendered fragments + version |
 | `POST /api/action` | `{act, id?, text?}` — `add`, `toggle`, `del`, `clear`, `sw-toggle`, `sw-start`, `sw-stop`, `sw-lap`, `sw-reset` |
 
@@ -86,21 +85,9 @@ application/json`, and otherwise redirects back to the referrer so the plain
 
 The Kindle's Experimental Browser has no fullscreen mode and its UI chrome
 cannot be hidden from the page, so the layout has to be sized to whatever
-viewport the browser hands over. `GET /probe` reports that viewport plus the
-CSS and JS features the device actually supports, in type large enough to read
-on the panel. Open it on the Kindle and tune `public/kindle.css` to the numbers
-it gives, rather than to an assumed screen size.
-
-The feature checks are calibrated against a modern browser: every row should
-read `yes` in desktop Chrome. A `NO` there means the probe is wrong, not the
-device.
-
-The **Toolbar test** at the bottom settles whether the old scroll-to-hide trick
-works here. It gives the page room to scroll, scrolls it, and compares
-`documentElement.clientHeight` before and after: if the browser hands back the
-space its chrome occupied, the viewport gets measurably taller. Chrome should
-report "bar stayed put" — it never hides its chrome, so that is the control
-case, and a pass there would mean the test is broken.
+viewport the browser hands over. Measure that viewport on the device itself and
+tune `public/kindle.css` to the real numbers, rather than to an assumed screen
+size.
 
 ## Notes
 
