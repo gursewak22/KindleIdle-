@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- An e-ink page with a signal arc: the Kindle screen, being served. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#1B1A17"
+        android:pathData="M36,28h30a4,4 0 0 1 4,4v44a4,4 0 0 1 -4,4h-30a4,4 0 0 1 -4,-4v-44a4,4 0 0 1 4,-4zM38,36v36h26v-36z" />
+    <path
+        android:fillColor="#1B1A17"
+        android:pathData="M43,43h16v3h-16zM43,51h16v3h-16zM43,59h10v3h-10z" />
+    <path
+        android:strokeColor="#1B1A17"
+        android:strokeWidth="3"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000"
+        android:pathData="M74,44a14,14 0 0 1 0,20M80,38a22,22 0 0 1 0,32" />
+</vector>

@@ -12,8 +12,11 @@
   --rule-soft: #e8e4db;
 }
 
+/* Three states, not two: no cookie means follow the phone, and a tap writes
+   one that outranks it. The dark values are repeated rather than shared
+   because a media query and a class cannot select the same block. */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not(.theme-light) {
     --paper: #121211;
     --paper-raised: #1e1d1a;
     --ink: #ebe7dd;
@@ -22,9 +25,29 @@
     --rule: #35322c;
     --rule-soft: #26241f;
   }
-  /* The vignette is monochrome line art, so one inversion re-inks it. */
-  .scene svg { filter: invert(1); }
 }
+
+:root.theme-dark {
+  --paper: #121211;
+  --paper-raised: #1e1d1a;
+  --ink: #ebe7dd;
+  --ink-soft: #948e83;
+  --ink-faint: #6b665d;
+  --rule: #35322c;
+  --rule-soft: #26241f;
+}
+
+/* The scenes are authored black-on-white with each shape tagged by the role
+   its colour plays, so the palette repaints them without an inversion filter
+   -- which would have flipped the whole vignette, greys and all. */
+.f-ink { fill: var(--ink); }
+.s-ink { stroke: var(--ink); }
+.f-paper { fill: var(--paper); }
+.s-paper { stroke: var(--paper); }
+.f-soft { fill: var(--ink-soft); }
+.s-soft { stroke: var(--ink-soft); }
+.f-faint { fill: var(--rule); }
+.s-faint { stroke: var(--rule); }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -53,9 +76,10 @@ a { color: inherit; text-decoration: none; }
   padding: 26px 22px 32px;
 }
 
-body.view-idle  #p-idle  { display: block; }
-body.view-tasks #p-tasks { display: block; }
-body.view-timer #p-timer { display: block; }
+body.view-idle   #p-idle   { display: block; }
+body.view-tasks  #p-tasks  { display: block; }
+body.view-timer  #p-timer  { display: block; }
+body.view-scenes #p-scenes { display: block; }
 
 .head { padding-bottom: 14px; }
 
@@ -98,8 +122,10 @@ body.view-timer #p-timer { display: block; }
   color: var(--ink-soft);
 }
 
-.scene { max-width: 330px; margin: 20px auto 6px; }
-.scene svg { display: block; width: 100%; height: auto; }
+.scene { max-width: 420px; margin: 22px auto 8px; }
+.scene svg { width: 100%; height: auto; }
+.scene .sc { display: none; }
+.scene .sc.on { display: block; }
 
 .upnext { border-top: 1px solid var(--rule); padding-top: 18px; }
 
@@ -233,6 +259,40 @@ body.view-timer #p-timer { display: block; }
 
 .foot { padding-top: 28px; text-align: center; }
 
+/* The account row: pairing and signing out, set as footnotes under the one
+   control anybody actually came here for. Sign out is a form post rather than
+   a link, because a GET would let any page on the phone knock this device off
+   by embedding an image. */
+.acct {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  margin-top: 26px;
+}
+
+.acct a,
+.acct button {
+  font: inherit;
+  font-size: 14px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  background: none;
+  border: 0;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+.acct a { text-decoration: none; }
+
+/* A hairline between the two rather than a bullet: the same rule the lists
+   and panel heads use, so the row reads as part of the same paper. */
+.acct form { border-left: 1px solid var(--rule); }
+
+.acct a:active,
+.acct button:active { color: var(--ink); }
+
 /* ---------- stopwatch ---------- */
 
 .swwrap { text-align: center; padding: 34px 0 28px; }
@@ -309,7 +369,7 @@ body.view-timer #p-timer { display: block; }
   justify-content: center;
   gap: 8px;
   font-size: 11px;
-  letter-spacing: 0.24em;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--ink-faint);
   border-left: 1px solid var(--rule-soft);
@@ -335,3 +395,286 @@ body.view-timer #p-timer { display: block; }
 
 #scene .fr { visibility: hidden; }
 #scene .fr.on { visibility: visible; }
+
+/* ---------- dark mode switch ---------- */
+
+/* Pinned to the viewport rather than to a panel, so it survives a scroll and
+   sits above the sticky add form. */
+.tbtn {
+  position: absolute;
+  top: 0; right: 0;
+  z-index: 5;
+  width: 60px; height: 60px;
+  padding: 18px;
+  color: var(--ink);
+}
+
+.tbtn .ic { display: none; width: 24px; height: 24px; }
+
+/* Show the destination, not the current state: a moon means "go dark". */
+.tbtn .ic-moon { display: block; }
+:root.theme-dark .tbtn .ic-moon { display: none; }
+:root.theme-dark .tbtn .ic-sun { display: block; }
+
+@media (prefers-color-scheme: dark) {
+  :root:not(.theme-light) .tbtn .ic-moon { display: none; }
+  :root:not(.theme-light) .tbtn .ic-sun { display: block; }
+}
+
+/* ---------- scene picker ---------- */
+
+#p-scenes .head { border-bottom: 1px solid var(--rule); }
+
+/* Tiles are contact prints, not posters: the vignette only has to be
+   recognisable here, and five of them at half this size read as a set rather
+   than as five separate pictures. auto-fill lands three to a row on a phone
+   and more on a tablet without a breakpoint. */
+.scenes {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.pick {
+  display: block;
+  width: 100%;
+  border: 1px solid var(--rule);
+  background: transparent;
+  color: inherit;
+  font-family: inherit;
+  padding: 6px 6px 5px;
+  text-align: center;
+}
+
+.thumb {
+  display: block;
+  position: relative;
+  background: var(--paper);
+  border: 1px solid var(--rule-soft);
+}
+
+.pick .th { display: block; width: 100%; height: auto; }
+
+/* The staged tile thickens its rule rather than filling: a filled tile would
+   fight the artwork inside it. Padding drops by the extra border width so the
+   grid does not shift as the selection moves. */
+.pick.sel {
+  border: 2px solid var(--ink);
+  padding: 5px 5px 4px;
+  background: var(--paper-raised);
+}
+
+/* A square mark, not a fill, on whichever scene the Kindle is actually
+   showing -- so a staged pick and the live one stay legible at once. */
+.pick.on .thumb::after {
+  content: '';
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 6px;
+  height: 6px;
+  background: var(--ink);
+}
+
+.pick .nm {
+  display: block;
+  margin-top: 6px;
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pick.sel .nm { color: var(--ink); }
+.pick:active { background: var(--paper-raised); }
+
+/* Sticky so the button stays reachable while the grid scrolls behind it. */
+.applybar {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 20px;
+  padding: 14px 0 2px;
+  background: var(--paper);
+  border-top: 1px solid var(--rule);
+}
+
+.applymsg {
+  flex: 1;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  color: var(--ink-soft);
+}
+
+.applybar .btn {
+  flex: none;
+  padding: 12px 22px;
+  background: transparent;
+  color: var(--ink);
+  font-family: inherit;
+}
+
+.applybar .btn[disabled] {
+  border-color: var(--rule);
+  color: var(--ink-faint);
+}
+
+/* ---------------------------------------------------------------------------
+   Wider windows
+
+   The remote is opened on a phone most of the time, so everything above is the
+   phone. A laptop window is not a big phone though: the same panel stretched
+   across 1400px gives line lengths nothing can read and a vignette lost in the
+   middle of an empty page. Three things change with width, and nothing else
+   does -- the JS never learns about any of this, and one panel at a time still
+   holds.
+
+     1. text sits in a measured column instead of spanning the window,
+     2. the nav leaves the bottom edge for the left, where a pointer expects it,
+     3. display type and the vignette grow, because the reading distance grew.
+
+   Padding does the centring rather than a max-width on every child, so the
+   scene keeps its own cap and stays a picture rather than a mural. The caps
+   are viewport-relative: a fixed 600px looks generous on a laptop and lost on
+   a 4K panel, and the scene in particular is bounded by height as well, since
+   it is the one element tall enough to run off the bottom of a short window.
+--------------------------------------------------------------------------- */
+
+/* Tablets and small windows: still a bottom nav, but a centred column. */
+@media (min-width: 620px) {
+  body { font-size: 17.5px; }
+
+  .panel { padding: 34px max(26px, calc((100vw - 600px) / 2)) 44px; }
+
+  .clock { font-size: clamp(84px, 11vw, 104px); }
+  .date { font-size: 13px; }
+  .sw { font-size: clamp(78px, 10vw, 96px); }
+  .scene { max-width: min(480px, 62vh); margin: 28px auto 10px; }
+
+  .tbtn { width: 66px; height: 66px; padding: 21px; }
+}
+
+/* Laptop and up: the nav becomes a rail down the left. Same four links in the
+   same order -- only the axis changes, so `.on` and the badge keep working
+   untouched. */
+@media (min-width: 900px) {
+  body { font-size: 18px; }
+
+  #nav {
+    top: 0; bottom: 0;
+    right: auto;
+    width: 216px;
+    height: auto;
+    flex-direction: column;
+    padding: 30px 0 0;
+    border-top: 0;
+    border-right: 2px solid var(--ink);
+  }
+
+  #nav a {
+    flex: none;
+    height: 58px;
+    justify-content: flex-start;
+    gap: 0;
+    padding: 0 26px;
+    font-size: 12px;
+    letter-spacing: 0.2em;
+    border-left: 0;
+    border-bottom: 1px solid var(--rule-soft);
+  }
+
+  #nav a:last-child { border-bottom: 0; }
+  #nav b { margin-left: auto; }
+
+  .panel {
+    inset: 0 0 0 216px;
+    padding: 46px max(44px, calc((100vw - 216px - 720px) / 2)) 64px;
+  }
+
+  .clock { font-size: clamp(104px, 8vw, 172px); }
+  .date { font-size: 14px; letter-spacing: 0.3em; }
+
+  .sw { font-size: clamp(96px, 7.5vw, 150px); }
+  .swwrap { padding: 8vh 0 40px; }
+
+  .scene { max-width: min(620px, 52vw, 72vh); margin: 34px auto 12px; }
+
+  .scenes { grid-template-columns: repeat(auto-fill, minmax(124px, 1fr)); gap: 14px; }
+  .pick .nm { font-size: 10px; }
+
+  .btns { gap: 14px; }
+  .btn { padding: 17px 8px; }
+
+  /* A mouse is precise, so the touch-sized rows can tighten up. */
+  .todos li.t { padding: 13px 0; }
+
+  .tbtn { width: 74px; height: 74px; padding: 25px; }
+  .tbtn .ic { width: 26px; height: 26px; }
+}
+
+/* Wide enough that the idle screen stops being a single stack: the clock spans
+   the top, the vignette takes the room it deserves, and "up next" moves into a
+   column beside it rather than below the fold. The pair is centred in whatever
+   height is left, so a tall window does not leave the whole screen sitting in
+   its top third -- `safe` so a short one scrolls from the top instead of
+   clipping the clock. */
+@media (min-width: 1180px) {
+  body.view-idle #p-idle {
+    display: grid;
+    grid-template-columns: minmax(380px, min(820px, 48vw, 96vh)) minmax(240px, 330px);
+    justify-content: center;
+    column-gap: 64px;
+    align-content: start;
+    align-content: safe center;
+    /* The measured column the other panels sit in is a reading width, and this
+       panel is not reading -- so it opts out and lets the two tracks centre
+       themselves at full size instead of being squeezed into 720px. */
+    padding: 48px 44px 64px;
+  }
+
+  #p-idle .head { grid-column: 1 / -1; }
+
+  #p-idle .scene {
+    grid-column: 1;
+    max-width: 100%;
+    margin: 40px 0 0;
+  }
+
+  #p-idle .upnext {
+    grid-column: 2;
+    margin-top: 40px;
+    padding: 2px 0 0 44px;
+    border-top: 0;
+    border-left: 1px solid var(--rule);
+  }
+
+  .upnext h2 { font-size: 12px; margin-bottom: 12px; }
+  #upnext li { font-size: 19px; padding: 9px 0 9px 22px; }
+  #upnext li::before { top: 18px; width: 7px; height: 7px; }
+}
+
+/* ---------- pointer affordances ---------- */
+
+/* :active alone is a touch idiom -- a mouse has a hover state to answer, and
+   nothing on this page was answering it. */
+@media (hover: hover) and (pointer: fine) {
+  a, button { cursor: pointer; }
+
+  #nav a:hover { color: var(--ink); background: var(--paper-raised); }
+  .btn:hover:not([disabled]) { background: var(--paper-raised); }
+  #add button:hover { background: var(--paper-raised); }
+  .todos .box:hover { background: var(--paper-raised); }
+  .todos .del:hover { color: var(--ink); }
+  .pick:hover { background: var(--paper-raised); }
+  .tbtn:hover { color: var(--ink-soft); }
+}
+
+/* Keyboard focus needs to be visible once there is a keyboard to use. */
+:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }

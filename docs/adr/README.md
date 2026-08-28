@@ -15,7 +15,7 @@ one Markdown file per decision, numbered in the order it was made.
 Start a new one by copying the template:
 
 ```sh
-cp docs/adr/0000-template.md docs/adr/0007-my-decision.md
+cp docs/adr/0000-template.md docs/adr/0010-my-decision.md
 ```
 
 ## What belongs in an ADR
@@ -36,5 +36,8 @@ belong in a code comment next to the code.
 | [0004](0004-json-file-store-with-atomic-writes.md) | Keep state in memory, persist to one JSON file atomically | Accepted |
 | [0005](0005-no-runtime-dependencies.md) | No runtime dependencies, no build step | Accepted |
 | [0006](0006-phone-remote-shares-the-server.md) | The phone remote is a second view of the same state | Accepted |
+| [0007](0007-scene-choice-is-shared-state.md) | Ship every idle scene in the page and choose one from shared state | Accepted |
+| [0008](0008-dark-mode-is-a-per-device-cookie.md) | Keep dark mode per device, in a cookie | Accepted |
+| [0009](0009-sign-in-on-the-phone-pair-the-kindle.md) | Sign in on the phone, pair the Kindle with a short-lived code | Accepted |
 
 For how these fit together, see [../architecture.md](../architecture.md).
