@@ -27,6 +27,7 @@
   var view = 'idle';
   var lastTouch = 0;
   var frame = 0;
+  var scene = boot.scene;
 
   // Last markup the server sent for each region, so we only touch the DOM
   // when that region actually changed. Every repaint costs an e-ink refresh.
@@ -63,6 +64,38 @@
     }
     if (name === 'idle') paintClock();
     if (name === 'timer') paintSw();
+  }
+
+  function frameEl(i) {
+    return document.getElementById('fr-' + scene + '-' + i);
+  }
+
+  // Every scene is already in the page, so a change from the phone costs one
+  // class swap per svg -- no reload, and only the vignette repaints.
+  function switchScene(next) {
+    var el = document.getElementById('sc-' + next);
+    if (!el || next === scene) return;
+    var old = document.getElementById('sc-' + scene);
+    if (old) old.setAttribute('class', 'sc');
+    scene = next;
+    // Rewind the incoming scene so the ticker and the markup agree on which
+    // frame is showing; the outgoing one froze wherever its loop had got to.
+    for (var i = 0; i < FRAME_COUNT; i++) {
+      var g = frameEl(i);
+      if (g) g.setAttribute('class', i === 0 ? 'fr on' : 'fr');
+    }
+    frame = 0;
+    el.setAttribute('class', 'sc on');
+  }
+
+  // Dark mode is this device's own choice, kept in a cookie so the server can
+  // paint the next load correctly instead of the page flashing white first.
+  function toggleTheme() {
+    var el = document.documentElement;
+    var dark = el.className.indexOf('theme-dark') > -1;
+    var next = dark ? 'light' : 'dark';
+    el.className = 'theme-' + next;
+    document.cookie = 'ki_theme=' + next + ';path=/;max-age=31536000';
   }
 
   function paintClock() {
@@ -107,11 +140,24 @@
     if (d.upNext !== shown.upNext) { shown.upNext = d.upNext; elUpNext.innerHTML = d.upNext; }
     if (d.laps !== shown.laps) { shown.laps = d.laps; elLaps.innerHTML = d.laps; }
     setCount(d.openCount);
+    if (d.scene && d.scene !== scene) switchScene(d.scene);
     sw = d.sw;
     paintSw();
   }
 
   /* ---------- network ---------- */
+
+  // The session ran out, or the passphrase changed. Reloading lands on the
+  // login form, which is the only place this device can do anything about it.
+  // Guarded because a reload is not instant and the poll would otherwise fire
+  // a second one on its way out.
+  var reloading = false;
+
+  function signedOut() {
+    if (reloading) return;
+    reloading = true;
+    window.location.reload();
+  }
 
   function post(act, id) {
     var xhr = new XMLHttpRequest();
@@ -120,6 +166,7 @@
     xhr.setRequestHeader('Accept', 'application/json');
     xhr.onreadystatechange = function () {
       if (xhr.readyState !== 4) return;
+      if (xhr.status === 401) { signedOut(); return; }
       if (xhr.status === 200) {
         try { apply(JSON.parse(xhr.responseText)); } catch (e) {}
       }
@@ -142,6 +189,7 @@
       if (xhr.readyState !== 4 || settled) return;
       settled = true;
       clearTimeout(guard);
+      if (xhr.status === 401) { signedOut(); return; }
       if (xhr.status === 200) {
         try { apply(JSON.parse(xhr.responseText)); } catch (e) {}
         setTimeout(poll, 150);
@@ -175,6 +223,8 @@
       var act = el.getAttribute('data-act');
       if (act) {
         e.preventDefault();
+        // The theme never leaves this device, so it never reaches the server.
+        if (act === 'theme') { toggleTheme(); return; }
         if (act === 'sw-toggle') swToggleLocal();
         if (act === 'toggle' && el.parentNode) {
           var li = el.parentNode;
@@ -198,8 +248,11 @@
   setInterval(function () {
     if (view !== 'idle') return;
     var next = (frame + 1) % FRAME_COUNT;
-    document.getElementById('fr' + frame).setAttribute('class', 'fr');
-    document.getElementById('fr' + next).setAttribute('class', 'fr on');
+    var from = frameEl(frame);
+    var to = frameEl(next);
+    if (!from || !to) return;
+    from.setAttribute('class', 'fr');
+    to.setAttribute('class', 'fr on');
     frame = next;
   }, FRAME_MS);
 
