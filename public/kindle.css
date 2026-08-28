@@ -71,7 +71,12 @@ body.view-timer #p-timer { display: block; }
   margin: 18px auto 4px;
 }
 
-.scene svg { display: block; width: 100%; height: auto; }
+.scene svg { width: 100%; height: auto; }
+
+/* All five scenes ship in the page; the chosen one is the only one shown, so
+   switching costs a class swap instead of a page load. */
+.scene .sc { display: none; }
+.scene .sc.on { display: block; }
 
 .upnext { border-top: 1px solid #999; padding-top: 16px; }
 
@@ -265,6 +270,80 @@ body.view-timer #p-timer { display: block; }
 
 #scene .fr { visibility: hidden; }
 #scene .fr.on { visibility: visible; }
+
+/* ---------- dark mode switch ---------- */
+
+/* Pinned to the viewport corner, clear of every panel's heading. */
+.tbtn {
+  position: absolute;
+  top: 0; right: 0;
+  z-index: 5;
+  width: 84px; height: 84px;
+  padding: 26px;
+  color: #000;
+}
+
+.tbtn .ic { display: none; width: 32px; height: 32px; }
+
+/* The glyph names where a tap goes, not where you are: moon means go dark. */
+.tbtn .ic-moon { display: block; }
+.theme-dark .tbtn .ic-moon { display: none; }
+.theme-dark .tbtn .ic-sun { display: block; }
+
+/* ---------- dark mode ----------
+
+   The panel has no backlight to dim, so dark mode here is a true inversion:
+   white ink on black paper, with the greys re-picked rather than flipped so
+   hairlines stay hairlines instead of turning into glare. Kept as an override
+   block because custom properties are not safe on this browser. */
+
+.theme-dark, .theme-dark body { background: #000; color: #fff; }
+
+.theme-dark .head { border-bottom-color: #fff; }
+.theme-dark .head .sub { color: #aaa; }
+.theme-dark #p-idle .head { border-color: #666; }
+.theme-dark .date { color: #bbb; }
+
+.theme-dark .upnext { border-top-color: #666; }
+.theme-dark .upnext h2 { color: #aaa; }
+.theme-dark #upnext li:before { background: #fff; }
+.theme-dark #upnext li.more,
+.theme-dark #upnext li.empty { color: #999; }
+
+.theme-dark .todos li.t { border-bottom-color: #444; }
+.theme-dark .todos .box { border-color: #fff; }
+.theme-dark .todos li.done .box { background: #fff; }
+.theme-dark .todos .del { color: #888; }
+.theme-dark .todos li.sep { color: #999; border-bottom-color: #fff; }
+.theme-dark .todos li.empty { color: #999; }
+.theme-dark .todos li.empty span { color: #777; }
+
+.theme-dark .btn { border-color: #fff; }
+.theme-dark .btn.ghost { border-color: #666; color: #aaa; }
+.theme-dark .btn:active { background: #fff; color: #000; }
+
+.theme-dark .laps li { border-bottom-color: #333; }
+.theme-dark .laps li.lhead { border-bottom-color: #fff; }
+
+.theme-dark #nav { border-top-color: #fff; }
+.theme-dark #nav a { color: #aaa; border-left-color: #333; }
+.theme-dark #nav a.on { color: #fff; background: #222; }
+.theme-dark #nav a:active { background: #fff; color: #000; }
+
+.theme-dark .tbtn { color: #fff; }
+
+/* The scenes and the switch icons are authored black-on-white with every
+   shape tagged by the role its colour plays; these repaint those roles. The
+   literal fill/stroke attributes remain the light theme, so a browser that
+   ignores CSS on SVG still draws the light scene correctly. */
+.theme-dark .f-ink { fill: #fff; }
+.theme-dark .s-ink { stroke: #fff; }
+.theme-dark .f-paper { fill: #000; }
+.theme-dark .s-paper { stroke: #000; }
+.theme-dark .f-soft { fill: #888; }
+.theme-dark .s-soft { stroke: #888; }
+.theme-dark .f-faint { fill: #444; }
+.theme-dark .s-faint { stroke: #444; }
 
 /* ---------- landscape ---------- */
 

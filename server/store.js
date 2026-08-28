@@ -2,6 +2,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const idle = require('./idle');
 
 const DATA_DIR = path.join(__dirname, '..', 'data');
 const FILE = path.join(DATA_DIR, 'state.json');
@@ -10,6 +11,7 @@ const TMP = FILE + '.tmp';
 function blank() {
   return {
     todos: [],
+    scene: idle.DEFAULT_SCENE,
     stopwatch: { running: false, startedAt: null, accumulated: 0, laps: [] }
   };
 }
@@ -26,6 +28,9 @@ function load() {
     if (!Array.isArray(state.todos)) state.todos = [];
     state.stopwatch = Object.assign(blank().stopwatch, state.stopwatch || {});
     if (!Array.isArray(state.stopwatch.laps)) state.stopwatch.laps = [];
+    // A scene that no longer ships (renamed, dropped) falls back rather than
+    // leaving both screens with nothing to draw.
+    if (!idle.isScene(state.scene)) state.scene = idle.DEFAULT_SCENE;
   } catch (err) {
     state = blank();
   }
@@ -105,6 +110,13 @@ function clearDone() {
   return true;
 }
 
+function setScene(id) {
+  if (!idle.isScene(id) || state.scene === id) return false;
+  state.scene = id;
+  bump();
+  return true;
+}
+
 function stopwatchStart() {
   const sw = state.stopwatch;
   if (sw.running) return;
@@ -146,6 +158,7 @@ module.exports = {
   toggleTodo,
   deleteTodo,
   clearDone,
+  setScene,
   stopwatchStart,
   stopwatchStop,
   stopwatchReset,
